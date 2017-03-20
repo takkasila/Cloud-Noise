@@ -47975,7 +47975,7 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\nvoid main() {\r\n\r\n  // vec4 color = texture2D( image, uv );\r\n  gl_FragColor = vec4( cos(time)*cos(noiseVal), 0.75*sin(noiseVal), (norm.z+1.0)/2.0, 1.0 );\r\n  // gl_FragColor = vec4(vec3(cos(time)), 1.0);\r\n\r\n}"
+	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\nvoid main() {\r\n  gl_FragColor = vec4( cos(noiseVal+time), sin(noiseVal), (norm.z+1.0)/2.0 * cos(noiseVal), 1.0 );\r\n}"
 
 /***/ }
 /******/ ]);
