@@ -1,8 +1,6 @@
 
 const THREE = require('three'); // older modules are imported like this. You shouldn't have to worry about this much
 import Framework from './framework'
-import Noise from './noise'
-import {other} from './noise'
 
 var icoMaterial = new THREE.ShaderMaterial({
     uniforms: {

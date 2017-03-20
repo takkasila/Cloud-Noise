@@ -7,7 +7,7 @@ varying vec3 norm;
 float hash(float n) { return fract(sin(n) * 1e4); }
 float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
 
-float noise(vec3 x) {
+float noise3D(vec3 x) {
 	const vec3 step = vec3(110, 241, 171);
 
 	vec3 i = floor(x);
@@ -26,6 +26,6 @@ float noise(vec3 x) {
 
 void main() {
     norm = normal;
-    noiseVal = noise(position+vec3(time));
+    noiseVal = noise3D(position+vec3(time));
     gl_Position = projectionMatrix * modelViewMatrix * vec4( position + noiseVal * norm, 1.0 );
 }
