@@ -6,7 +6,7 @@ var icoMaterial = new THREE.ShaderMaterial({
     uniforms: {
       time:{
         type: "float",
-        value: ((Date.now()%1000000)/1000)
+        value: (Date.now()%10000000)/10000
       }
     },
     vertexShader: require('./shaders/adam-vert.glsl'),
@@ -39,7 +39,7 @@ function onLoad(framework) {
 
 // called on frame updates
 function onUpdate(framework) {
-  icoMaterial.uniforms.time.value = (Date.now()%1000000)/1000;
+  icoMaterial.uniforms.time.value = (Date.now()%10000000)/10000;
 }
 
 // when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate

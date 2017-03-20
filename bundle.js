@@ -59,7 +59,7 @@
 	  uniforms: {
 	    time: {
 	      type: "float",
-	      value: Date.now() % 1000000 / 1000
+	      value: Date.now() % 10000000 / 10000
 	    }
 	  },
 	  vertexShader: __webpack_require__(8),
@@ -92,7 +92,7 @@
 	
 	// called on frame updates
 	function onUpdate(framework) {
-	  icoMaterial.uniforms.time.value = Date.now() % 1000000 / 1000;
+	  icoMaterial.uniforms.time.value = Date.now() % 10000000 / 10000;
 	}
 	
 	// when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
@@ -47969,13 +47969,13 @@
 /* 8 */
 /***/ function(module, exports) {
 
-	module.exports = "\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\n// Value noise by Morgan McGuire @morgan3d, http://graphicscodex.com\r\nfloat hash(float n) { return fract(sin(n) * 1e4); }\r\nfloat hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }\r\n\r\nfloat noise3D(vec3 x) {\r\n\tconst vec3 step = vec3(110, 241, 171);\r\n\r\n\tvec3 i = floor(x);\r\n\tvec3 f = fract(x);\r\n \r\n\t// For performance, compute the base input to a 1D hash from the integer part of the argument and the \r\n\t// incremental change to the 1D based on the 3D -> 1D wrapping\r\n  float n = dot(i, step);\r\n\r\n\tvec3 u = f * f * (3.0 - 2.0 * f);\r\n\treturn mix(mix(mix( hash(n + dot(step, vec3(0, 0, 0))), hash(n + dot(step, vec3(1, 0, 0))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 0))), hash(n + dot(step, vec3(1, 1, 0))), u.x), u.y),\r\n               mix(mix( hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);\r\n}\r\n\r\nvoid main() {\r\n    norm = normal;\r\n    noiseVal = noise3D(position+vec3(time));\r\n    gl_Position = projectionMatrix * modelViewMatrix * vec4( position + noiseVal * norm, 1.0 );\r\n}"
+	module.exports = "\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\n#define PI 3.1415926535\r\n#define OCTAVE 5\r\n#define PERSISTENCE 0.6\r\n\r\n// Value noise by Morgan McGuire @morgan3d, http://graphicscodex.com\r\nfloat hash(float n) { return fract(sin(n) * 1e4); }\r\nfloat hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }\r\n\r\nfloat noise3D(vec3 p) {\r\n\tconst vec3 step = vec3(110, 241, 171);\r\n\r\n\tvec3 i = floor(p);\r\n\tvec3 f = fract(p);\r\n \r\n\t// For performance, compute the base input to a 1D hash from the integer part of the argument and the \r\n\t// incremental change to the 1D based on the 3D -> 1D wrapping\r\n  float n = dot(i, step);\r\n\r\n\tvec3 u = f * f * (3.0 - 2.0 * f);\r\n\treturn mix(mix(mix( hash(n + dot(step, vec3(0, 0, 0))), hash(n + dot(step, vec3(1, 0, 0))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 0))), hash(n + dot(step, vec3(1, 1, 0))), u.x), u.y),\r\n               mix(mix( hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);\r\n}\r\n\r\nfloat lerp(float a, float b, float t)\r\n{\r\n    return a * (1.0 - t) + b * t;\r\n}\r\n\r\nfloat cerp(float a, float b, float t)\r\n{\r\n    float cos_t = (1.0 - cos(t * PI)) * 0.5;\r\n    return lerp(a, b, cos_t);\r\n}\r\n\r\n// 3D cosine interpolation\r\nfloat interpolateNoise(vec3 p, float frequency)\r\n{\r\n    vec3 newP = p * frequency;\r\n    vec3 p1, p2, p3, p4, p5, p6, p7, p8;\r\n    vec3 diff = vec3(1.0) * frequency;\r\n    // RHS, bottom to top\r\n    p1 = newP + vec3(-diff.x, -diff.y, -diff.z);\r\n    p2 = newP + vec3(+diff.x, -diff.y, -diff.z);\r\n    p3 = newP + vec3(+diff.x, +diff.y, -diff.z);\r\n    p4 = newP + vec3(-diff.x, +diff.y, -diff.z);\r\n    p5 = newP + vec3(-diff.x, -diff.y, +diff.z);\r\n    p6 = newP + vec3(+diff.x, -diff.y, +diff.z);\r\n    p7 = newP + vec3(+diff.x, +diff.y, +diff.z);\r\n    p8 = newP + vec3(-diff.x, +diff.y, +diff.z);\r\n\r\n    return cerp(\r\n        cerp(\r\n            cerp(\r\n                noise3D(p1)\r\n                , noise3D(p2)\r\n                , 0.5\r\n            )\r\n            , cerp(\r\n                noise3D(p3)\r\n                , noise3D(p4)\r\n                , 0.5\r\n            )\r\n            , 0.5\r\n        )\r\n        , cerp(\r\n            cerp(\r\n                noise3D(p5)\r\n                , noise3D(p6)\r\n                , 0.5\r\n            )\r\n            , cerp(\r\n                noise3D(p7)\r\n                , noise3D(p8)\r\n                , 0.5\r\n            )\r\n            , 0.5\r\n        )\r\n        , 0.5\r\n    );\r\n}\r\n\r\nfloat fbm(vec3 p)\r\n{\r\n    float totalNoise = 0.0;\r\n    float amplitude = 1.0;\r\n    float frequency;\r\n    for (int i = 0; i < OCTAVE; i++)\r\n    {\r\n        frequency = pow(2.0, float(i));\r\n        totalNoise +=  amplitude * interpolateNoise(p, frequency);\r\n        amplitude *= PERSISTENCE;\r\n    }\r\n    return totalNoise;\r\n}\r\n\r\nvoid main() {\r\n    norm = normal;\r\n    noiseVal = fbm(position+vec3(time));\r\n    gl_Position = projectionMatrix * modelViewMatrix * vec4( position * 0.05 + noiseVal * norm * 1.0, 1.0 );\r\n}"
 
 /***/ },
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\nvoid main() {\r\n  gl_FragColor = vec4( cos(noiseVal+time), sin(noiseVal), (norm.z+1.0)/2.0 * cos(noiseVal), 1.0 );\r\n}"
+	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\nvarying float normHeight;\r\n\r\nvoid main() {\r\n  float normNoise = (noiseVal-1.0)*2.0;\r\n  gl_FragColor = vec4( 1.0-normNoise/2.0, normNoise, sin(normNoise+time), 1.0 );\r\n  // gl_FragColor = vec4( normNoise, normNoise, normNoise, 1.0);\r\n}"
 
 /***/ }
 /******/ ]);
