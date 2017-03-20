@@ -59,6 +59,17 @@
 	var THREE = __webpack_require__(6); // older modules are imported like this. You shouldn't have to worry about this much
 	
 	
+	var icoMaterial = new THREE.ShaderMaterial({
+	  uniforms: {
+	    time: {
+	      type: "float",
+	      value: Date.now() % 1000000 / 1000
+	    }
+	  },
+	  vertexShader: __webpack_require__(9),
+	  fragmentShader: __webpack_require__(10)
+	});
+	
 	// called after the scene loads
 	function onLoad(framework) {
 	  var scene = framework.scene;
@@ -67,29 +78,8 @@
 	  var gui = framework.gui;
 	  var stats = framework.stats;
 	
-	  // LOOK: the line below is synyatic sugar for the code above. Optional, but I sort of recommend it.
-	  // var {scene, camera, renderer, gui, stats} = framework; 
+	  var ico = new THREE.IcosahedronGeometry(1, 5);
 	
-	  // initialize a simple box and material
-	  // var box = new THREE.BoxGeometry(1, 1, 1);
-	  var ico = new THREE.IcosahedronGeometry();
-	
-	  // var adamMaterial = new THREE.ShaderMaterial({
-	  //   uniforms: {
-	  //     image: { // Check the Three.JS documentation for the different allowed types and values
-	  //       type: "t", 
-	  //       value: THREE.ImageUtils.loadTexture('./adam.jpg')
-	  //     }
-	  //   },
-	  //   vertexShader: require('./shaders/adam-vert.glsl'),
-	  //   fragmentShader: require('./shaders/adam-frag.glsl')
-	  // });
-	  var icoMaterial = new THREE.ShaderMaterial({
-	    vertexShader: __webpack_require__(9),
-	    fragmentShader: __webpack_require__(10)
-	  });
-	  // var adamCube = new THREE.Mesh(box, adamMaterial);
-	  // scene.add(adamCube);
 	  var icoMesh = new THREE.Mesh(ico, icoMaterial);
 	  scene.add(icoMesh);
 	
@@ -105,20 +95,12 @@
 	}
 	
 	// called on frame updates
-	function onUpdate(framework) {}
-	// console.log(`the time is ${new Date()}`);
-	
+	function onUpdate(framework) {
+	  icoMaterial.uniforms.time.value = Date.now() % 1000000 / 1000;
+	}
 	
 	// when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
 	_framework2.default.init(onLoad, onUpdate);
-	
-	// console.log('hello world');
-	
-	// console.log(Noise.generateNoise());
-	
-	// Noise.whatever()
-	
-	// console.log(other())
 
 /***/ },
 /* 1 */
@@ -48019,13 +48001,13 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = "\r\n// varying vec2 vUv;\r\nvarying vec3 norm;\r\nvoid main() {\r\n    // vUv = uv;\r\n    norm = normal;\r\n    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\r\n}"
+	module.exports = "\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\n// Value noise by Morgan McGuire @morgan3d, http://graphicscodex.com\r\nfloat hash(float n) { return fract(sin(n) * 1e4); }\r\nfloat hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }\r\n\r\nfloat noise(vec3 x) {\r\n\tconst vec3 step = vec3(110, 241, 171);\r\n\r\n\tvec3 i = floor(x);\r\n\tvec3 f = fract(x);\r\n \r\n\t// For performance, compute the base input to a 1D hash from the integer part of the argument and the \r\n\t// incremental change to the 1D based on the 3D -> 1D wrapping\r\n  float n = dot(i, step);\r\n\r\n\tvec3 u = f * f * (3.0 - 2.0 * f);\r\n\treturn mix(mix(mix( hash(n + dot(step, vec3(0, 0, 0))), hash(n + dot(step, vec3(1, 0, 0))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 0))), hash(n + dot(step, vec3(1, 1, 0))), u.x), u.y),\r\n               mix(mix( hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),\r\n                   mix( hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);\r\n}\r\n\r\nvoid main() {\r\n    norm = normal;\r\n    noiseVal = noise(position+vec3(time));\r\n    gl_Position = projectionMatrix * modelViewMatrix * vec4( position + noiseVal * norm, 1.0 );\r\n}"
 
 /***/ },
 /* 10 */
 /***/ function(module, exports) {
 
-	module.exports = "// varying vec2 vUv;\r\n// varying float noise;\r\n// uniform sampler2D image;\r\nvarying vec3 norm;\r\n\r\nvoid main() {\r\n\r\n  // vec2 uv = vec2(1,1) - vUv;\r\n  // vec4 color = texture2D( image, uv );\r\n\r\n  gl_FragColor = vec4( norm.rgb, 1.0 );\r\n\r\n}"
+	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\n\r\nvoid main() {\r\n\r\n  // vec4 color = texture2D( image, uv );\r\n  gl_FragColor = vec4( norm, 1.0 );\r\n  // gl_FragColor = vec4(vec3(cos(time)), 1.0);\r\n\r\n}"
 
 /***/ }
 /******/ ]);

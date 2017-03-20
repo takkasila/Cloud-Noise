@@ -4,6 +4,17 @@ import Framework from './framework'
 import Noise from './noise'
 import {other} from './noise'
 
+var icoMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      time:{
+        type: "float",
+        value: ((Date.now()%1000000)/1000)
+      }
+    },
+    vertexShader: require('./shaders/adam-vert.glsl'),
+    fragmentShader: require('./shaders/adam-frag.glsl')
+  });
+
 // called after the scene loads
 function onLoad(framework) {
   var scene = framework.scene;
@@ -12,29 +23,8 @@ function onLoad(framework) {
   var gui = framework.gui;
   var stats = framework.stats;
 
-  // LOOK: the line below is synyatic sugar for the code above. Optional, but I sort of recommend it.
-  // var {scene, camera, renderer, gui, stats} = framework; 
-
-  // initialize a simple box and material
-  // var box = new THREE.BoxGeometry(1, 1, 1);
-  var ico = new THREE.IcosahedronGeometry();
-
-  // var adamMaterial = new THREE.ShaderMaterial({
-  //   uniforms: {
-  //     image: { // Check the Three.JS documentation for the different allowed types and values
-  //       type: "t", 
-  //       value: THREE.ImageUtils.loadTexture('./adam.jpg')
-  //     }
-  //   },
-  //   vertexShader: require('./shaders/adam-vert.glsl'),
-  //   fragmentShader: require('./shaders/adam-frag.glsl')
-  // });
-  var icoMaterial = new THREE.ShaderMaterial({
-    vertexShader: require('./shaders/adam-vert.glsl'),
-    fragmentShader: require('./shaders/adam-frag.glsl')
-  });
-  // var adamCube = new THREE.Mesh(box, adamMaterial);
-  // scene.add(adamCube);
+  var ico = new THREE.IcosahedronGeometry(1, 5);
+  
   var icoMesh = new THREE.Mesh(ico, icoMaterial);
   scene.add(icoMesh);
 
@@ -51,16 +41,8 @@ function onLoad(framework) {
 
 // called on frame updates
 function onUpdate(framework) {
-  // console.log(`the time is ${new Date()}`);
+  icoMaterial.uniforms.time.value = (Date.now()%1000000)/1000;
 }
 
 // when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
 Framework.init(onLoad, onUpdate);
-
-// console.log('hello world');
-
-// console.log(Noise.generateNoise());
-
-// Noise.whatever()
-
-// console.log(other())
