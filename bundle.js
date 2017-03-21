@@ -56,19 +56,24 @@
 	
 	var THREE = __webpack_require__(6); // older modules are imported like this. You shouldn't have to worry about this much
 	
-	var Config = function Config(octave, persistence, innerRadius, outterRadius, hueStart, hueStop, rangeMultiplier) {
+	var Config = function Config(octave, persistence, innerRadius, outterRadius, hueStop, rangeMultiplier, topColor, btmColor, skyboxRadius) {
 	  _classCallCheck(this, Config);
 	
 	  this.octave = octave;
 	  this.persistence = persistence;
 	  this.innerRadius = innerRadius;
 	  this.outterRadius = outterRadius;
-	  this.hueStart = hueStart;
 	  this.hueStop = hueStop;
 	  this.rangeMultiplier = rangeMultiplier;
+	  this.topColor = topColor;
+	  this.btmColor = btmColor;
+	  this.skyboxRadius = skyboxRadius;
+	
+	  this.topColorGUI = [this.topColor.x * 255, this.topColor.y * 255, this.topColor.z * 255];
+	  this.btmColorGUI = [this.btmColor.x * 255, this.btmColor.y * 255, this.btmColor.z * 255];
 	};
 	
-	var config = new Config(4, 0.89, 0.5, 2.2, 0.05, 0.95, 4.1);
+	var config = new Config(4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
 	
 	var icoMaterial = new THREE.ShaderMaterial({
 	  uniforms: {
@@ -109,6 +114,25 @@
 	  fragmentShader: __webpack_require__(9)
 	});
 	
+	var skyboxMaterial = new THREE.ShaderMaterial({
+	  uniforms: {
+	    topColor: {
+	      type: "v3",
+	      value: config.topColor
+	    },
+	    btmColor: {
+	      type: "v3",
+	      value: config.btmColor
+	    },
+	    skyboxRadius: {
+	      type: "float",
+	      value: config.skyboxRadius
+	    }
+	  },
+	  vertexShader: __webpack_require__(10),
+	  fragmentShader: __webpack_require__(11)
+	});
+	
 	// called after the scene loads
 	function onLoad(framework) {
 	  var scene = framework.scene;
@@ -118,9 +142,13 @@
 	  var stats = framework.stats;
 	
 	  var ico = new THREE.IcosahedronGeometry(1, 6);
-	
 	  var icoMesh = new THREE.Mesh(ico, icoMaterial);
 	  scene.add(icoMesh);
+	
+	  var skybok = new THREE.IcosahedronGeometry(config.skyboxRadius, 5);
+	  var skyboxMesh = new THREE.Mesh(skybok, skyboxMaterial);
+	  skyboxMesh.material.side = THREE.BackSide;
+	  scene.add(skyboxMesh);
 	
 	  // set camera position
 	  camera.position.set(1, 1, 2);
@@ -128,29 +156,32 @@
 	
 	  // edit params and listen to changes like this
 	  // more information here: https://workshop.chromeexperiments.com/examples/gui/#1--Basic-Usage
-	  gui.add(camera, 'fov', 0, 180).onChange(function (newVal) {
+	  gui.add(camera, 'fov', 0, 180).name('Camera FOV').onChange(function (newVal) {
 	    camera.updateProjectionMatrix();
 	  });
-	  gui.add(config, 'octave').min(1).max(30).step(1).onChange(function (newVal) {
+	  gui.add(config, 'octave').name('Noise Octave').min(1).max(30).step(1).onChange(function (newVal) {
 	    icoMaterial.uniforms.octave.value = config.octave;
 	  });
-	  gui.add(config, 'persistence').min(0.00001).max(1.0).onChange(function (newVal) {
+	  gui.add(config, 'persistence').name('Noise Persistence').min(0.00001).max(1.0).onChange(function (newVal) {
 	    icoMaterial.uniforms.persistence.value = config.persistence;
 	  });
-	  gui.add(config, 'innerRadius').min(0).max(5).onChange(function (newVal) {
+	  gui.add(config, 'innerRadius').name('Core Radius').min(0).max(5).onChange(function (newVal) {
 	    icoMaterial.uniforms.innerRadius.value = config.innerRadius;
 	  });
-	  gui.add(config, 'outterRadius').min(0).max(10).onChange(function (newVal) {
+	  gui.add(config, 'outterRadius').name('Noise Radius').min(0).max(10).onChange(function (newVal) {
 	    icoMaterial.uniforms.outterRadius.value = config.outterRadius;
 	  });
-	  gui.add(config, 'hueStart').min(0).max(1).onChange(function (newVal) {
-	    icoMaterial.uniforms.hueStart.value = config.hueStart;
-	  });
-	  gui.add(config, 'hueStop').min(0).max(1).onChange(function (newVal) {
+	  gui.add(config, 'hueStop').name('HUE Distort').min(0).max(1).onChange(function (newVal) {
 	    icoMaterial.uniforms.hueStop.value = config.hueStop;
 	  });
-	  gui.add(config, 'rangeMultiplier').min(0).max(5).onChange(function (newVal) {
+	  gui.add(config, 'rangeMultiplier').name('HUE Range Scale').min(0).max(5).onChange(function (newVal) {
 	    icoMaterial.uniforms.rangeMultiplier.value = config.rangeMultiplier;
+	  });
+	  gui.addColor(config, 'topColorGUI').name('North Pole').onChange(function (newVal) {
+	    skyboxMaterial.uniforms.topColor.value = new THREE.Vector3(config.topColorGUI[0] / 255, config.topColorGUI[1] / 255, config.topColorGUI[2] / 255);
+	  });
+	  gui.addColor(config, 'btmColorGUI').name('South Pole').onChange(function (newVal) {
+	    skyboxMaterial.uniforms.btmColor.value = new THREE.Vector3(config.btmColorGUI[0] / 255, config.btmColorGUI[1] / 255, config.btmColorGUI[2] / 255);
 	  });
 	  // to prevent some kind of init bug
 	  icoMaterial.uniforms.innerRadius.value = config.innerRadius;
@@ -210,11 +241,11 @@
 	  window.addEventListener('load', function () {
 	
 	    var scene = new THREE.Scene();
-	    var camera = new THREE.PerspectiveCamera(92, window.innerWidth / window.innerHeight, 0.1, 1000);
+	    var camera = new THREE.PerspectiveCamera(92, window.innerWidth / window.innerHeight, 0.1, 2000);
 	    var renderer = new THREE.WebGLRenderer({ antialias: true });
 	    renderer.setPixelRatio(window.devicePixelRatio);
 	    renderer.setSize(window.innerWidth, window.innerHeight);
-	    renderer.setClearColor(0x020202, 0);
+	    renderer.setClearColor(0xFFFFFF, 1);
 	
 	    var controls = new OrbitControls(camera, renderer.domElement);
 	    controls.enableDamping = true;
@@ -48041,7 +48072,19 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nuniform float hueStar;\r\nuniform float hueStop;\r\nuniform float rangeMultiplier;\r\n\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\nvarying float normHeight;\r\n\r\nvec3 hsv2rgb(vec3 c) {\r\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\r\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\r\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\r\n}\r\n\r\nvoid main() {\r\n  float hueRange = hueStar + noiseVal * (hueStop - hueStar) * rangeMultiplier;\r\n  gl_FragColor = vec4(hsv2rgb(vec3(hueRange, noiseVal, 0.9)), 1.0);\r\n}"
+	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nuniform float hueStop;\r\nuniform float rangeMultiplier;\r\n\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\nvarying float normHeight;\r\n\r\nvec3 hsv2rgb(vec3 c) {\r\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\r\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\r\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\r\n}\r\n\r\nvoid main() {\r\n  float hueRange = noiseVal * hueStop * rangeMultiplier;\r\n  gl_FragColor = vec4(hsv2rgb(vec3(hueRange, noiseVal, 0.9)), 1.0);\r\n}"
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	module.exports = "\r\nvarying vec3 pos;\r\n\r\nvoid main()\r\n{\r\n    pos = position;\r\n    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\r\n}"
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	module.exports = "\r\nuniform vec3 topColor;\r\nuniform vec3 btmColor;\r\nuniform float skyboxRadius;\r\n\r\nvarying vec3 pos;\r\n\r\nvoid main()\r\n{\r\n    gl_FragColor = vec4(mix(btmColor, topColor, (pos.y+skyboxRadius)/(2.0*skyboxRadius)), 1.0);\r\n}"
 
 /***/ }
 /******/ ]);

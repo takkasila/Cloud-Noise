@@ -1,6 +1,5 @@
 // uniform sampler2D image;
 uniform float time;
-uniform float hueStar;
 uniform float hueStop;
 uniform float rangeMultiplier;
 
@@ -15,6 +14,6 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 void main() {
-  float hueRange = hueStar + noiseVal * (hueStop - hueStar) * rangeMultiplier;
+  float hueRange = noiseVal * hueStop * rangeMultiplier;
   gl_FragColor = vec4(hsv2rgb(vec3(hueRange, noiseVal, 0.9)), 1.0);
 }
