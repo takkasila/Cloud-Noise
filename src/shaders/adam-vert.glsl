@@ -1,11 +1,15 @@
 
 uniform float time;
+uniform int octave;
+uniform float persistence;
+uniform float innerRadius;
+uniform float outterRadius;
+
 varying float noiseVal;
 varying vec3 norm;
 
+#define MAX_OCTAVE 30
 #define PI 3.1415926535
-#define OCTAVE 5
-#define PERSISTENCE 0.6
 
 // Value noise by Morgan McGuire @morgan3d, http://graphicscodex.com
 float hash(float n) { return fract(sin(n) * 1e4); }
@@ -91,17 +95,22 @@ float fbm(vec3 p)
     float totalNoise = 0.0;
     float amplitude = 1.0;
     float frequency;
-    for (int i = 0; i < OCTAVE; i++)
+    for (int i = 0; i < MAX_OCTAVE; i++)
     {
-        frequency = pow(2.0, float(i));
-        totalNoise +=  amplitude * interpolateNoise(p, frequency);
-        amplitude *= PERSISTENCE;
+        if(i < octave)
+        {
+            frequency = pow(2.0, float(i));
+            totalNoise +=  amplitude * interpolateNoise(p, frequency);
+            amplitude *= persistence;
+        }
+        else
+            break;
     }
     return totalNoise;
 }
 
 void main() {
     norm = normal;
-    noiseVal = fbm(position+vec3(time));
-    gl_Position = projectionMatrix * modelViewMatrix * vec4( position * 0.05 + noiseVal * norm * 1.0, 1.0 );
+    noiseVal = fbm(position+vec3(time)) / float(octave);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position * innerRadius + noiseVal * norm * outterRadius, 1.0 );
 }
