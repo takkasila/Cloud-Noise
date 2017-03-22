@@ -65,8 +65,8 @@ var icoMaterial = new THREE.ShaderMaterial({
         , value: config.rangeMultiplier
       }
     }
-    , vertexShader: require('./shaders/adam-vert.glsl')
-    , fragmentShader: require('./shaders/adam-frag.glsl')
+    , vertexShader: require('./shaders/noise-vert.glsl')
+    , fragmentShader: require('./shaders/noise-frag.glsl')
 });
 
 var skyboxMaterial = new THREE.ShaderMaterial({
