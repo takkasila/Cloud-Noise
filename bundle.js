@@ -141,6 +141,8 @@
 	  fragmentShader: __webpack_require__(11)
 	});
 	
+	var audio = new Audio('http://imslp.org/images/c/cf/PMLP02312-16_-_Chopin_-_Nocturne_Op_9_No2.mp3');
+	
 	// called after the scene loads
 	function onLoad(framework) {
 	  var scene = framework.scene;
@@ -195,6 +197,8 @@
 	  // to prevent some kind of init bug
 	  icoMaterial.uniforms.innerRadius.value = config.innerRadius;
 	  icoMaterial.uniforms.speed.value = config.speed;
+	
+	  audio.play();
 	}
 	
 	// called on frame updates
