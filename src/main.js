@@ -21,7 +21,7 @@ class Config{
   }
 }
 
-var config = new Config(1.0, 4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
+var config = new Config(0.3, 4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
 
 var oldTime = (Date.now()%1000000)/10000;
 var newTime;
