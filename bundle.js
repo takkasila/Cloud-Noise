@@ -56,9 +56,10 @@
 	
 	var THREE = __webpack_require__(6); // older modules are imported like this. You shouldn't have to worry about this much
 	
-	var Config = function Config(octave, persistence, innerRadius, outterRadius, hueStop, rangeMultiplier, topColor, btmColor, skyboxRadius) {
+	var Config = function Config(speed, octave, persistence, innerRadius, outterRadius, hueStop, rangeMultiplier, topColor, btmColor, skyboxRadius) {
 	  _classCallCheck(this, Config);
 	
+	  this.speed = speed;
 	  this.octave = octave;
 	  this.persistence = persistence;
 	  this.innerRadius = innerRadius;
@@ -73,13 +74,20 @@
 	  this.btmColorGUI = [this.btmColor.x * 255, this.btmColor.y * 255, this.btmColor.z * 255];
 	};
 	
-	var config = new Config(4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
+	var config = new Config(1.0, 4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
+	
+	var oldTime = Date.now() % 1000000 / 10000;
+	var newTime;
 	
 	var icoMaterial = new THREE.ShaderMaterial({
 	  uniforms: {
 	    time: {
 	      type: "float",
-	      value: Date.now() % 10000000 / 10000
+	      value: oldTime
+	    },
+	    speed: {
+	      type: "float",
+	      vlaue: config.speed
 	    },
 	    octave: {
 	      type: "int",
@@ -159,6 +167,7 @@
 	  gui.add(camera, 'fov', 0, 180).name('Camera FOV').onChange(function (newVal) {
 	    camera.updateProjectionMatrix();
 	  });
+	  gui.add(config, 'speed', 0, 8).name('Speed');
 	  gui.add(config, 'octave').name('Noise Octave').min(1).max(30).step(1).onChange(function (newVal) {
 	    icoMaterial.uniforms.octave.value = config.octave;
 	  });
@@ -185,11 +194,14 @@
 	  });
 	  // to prevent some kind of init bug
 	  icoMaterial.uniforms.innerRadius.value = config.innerRadius;
+	  icoMaterial.uniforms.speed.value = config.speed;
 	}
 	
 	// called on frame updates
 	function onUpdate(framework) {
-	  icoMaterial.uniforms.time.value = Date.now() % 10000000 / 10000;
+	  newTime = Date.now() % 1000000 / 10000;
+	  icoMaterial.uniforms.time.value += (newTime - oldTime) * config.speed;
+	  oldTime = newTime;
 	}
 	
 	// when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
@@ -248,7 +260,7 @@
 	    renderer.setClearColor(0xFFFFFF, 1);
 	
 	    var controls = new OrbitControls(camera, renderer.domElement);
-	    controls.enableDamping = true;
+	    controls.enableDamping = false;
 	    controls.enableZoom = true;
 	    controls.target.set(0, 0, 0);
 	    controls.rotateSpeed = 0.3;
@@ -48072,7 +48084,7 @@
 /* 9 */
 /***/ function(module, exports) {
 
-	module.exports = "// uniform sampler2D image;\r\nuniform float time;\r\nuniform float hueStop;\r\nuniform float rangeMultiplier;\r\n\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\nvarying float normHeight;\r\n\r\nvec3 hsv2rgb(vec3 c) {\r\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\r\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\r\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\r\n}\r\n\r\nvoid main() {\r\n  float hueRange = noiseVal * hueStop * rangeMultiplier;\r\n  gl_FragColor = vec4(hsv2rgb(vec3(hueRange, noiseVal, 0.9)), 1.0);\r\n}"
+	module.exports = "// uniform sampler2D image;\r\nuniform float hueStop;\r\nuniform float rangeMultiplier;\r\n\r\nvarying float noiseVal;\r\nvarying vec3 norm;\r\nvarying float normHeight;\r\n\r\nvec3 hsv2rgb(vec3 c) {\r\n  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\r\n  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);\r\n  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);\r\n}\r\n\r\nvoid main() {\r\n  float hueRange = noiseVal * hueStop * rangeMultiplier;\r\n  gl_FragColor = vec4(hsv2rgb(vec3(hueRange, noiseVal, 0.9)), 1.0);\r\n}"
 
 /***/ },
 /* 10 */

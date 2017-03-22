@@ -1,5 +1,4 @@
 // uniform sampler2D image;
-uniform float time;
 uniform float hueStop;
 uniform float rangeMultiplier;
 

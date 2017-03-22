@@ -32,7 +32,7 @@ function init(callback, update) {
     renderer.setClearColor(0xFFFFFF, 1);
 
     var controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
+    controls.enableDamping = false;
     controls.enableZoom = true;
     controls.target.set(0, 0, 0);
     controls.rotateSpeed = 0.3;

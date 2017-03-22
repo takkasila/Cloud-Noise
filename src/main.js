@@ -3,8 +3,9 @@ const THREE = require('three'); // older modules are imported like this. You sho
 import Framework from './framework'
 
 class Config{
-  constructor(octave, persistence, innerRadius, outterRadius, hueStop, rangeMultiplier, topColor, btmColor, skyboxRadius)
+  constructor(speed, octave, persistence, innerRadius, outterRadius, hueStop, rangeMultiplier, topColor, btmColor, skyboxRadius)
   {
+    this.speed = speed;
     this.octave = octave;
     this.persistence = persistence;
     this.innerRadius = innerRadius;
@@ -20,13 +21,20 @@ class Config{
   }
 }
 
-var config = new Config(4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
+var config = new Config(1.0, 4, 0.89, 0.5, 2.2, 0.95, 4.1, new THREE.Vector3(0.9686274, 0.737254902, 0.4313725), new THREE.Vector3(1, 0.6941176, 0.6078431), 1000);
+
+var oldTime = (Date.now()%1000000)/10000;
+var newTime;
 
 var icoMaterial = new THREE.ShaderMaterial({
     uniforms: {
       time:{
         type: "float"
-        , value: (Date.now()%10000000)/10000
+        , value: oldTime
+      }
+      , speed:{
+        type: "float"
+        , vlaue: config.speed
       }
       , octave:{
         type: "int"
@@ -106,6 +114,7 @@ function onLoad(framework) {
   gui.add(camera, 'fov', 0, 180).name('Camera FOV').onChange(function(newVal) {
     camera.updateProjectionMatrix();
   });
+  gui.add(config, 'speed', 0, 8).name('Speed');
   gui.add(config, 'octave').name('Noise Octave').min(1).max(30).step(1).onChange(function(newVal) {
     icoMaterial.uniforms.octave.value = config.octave;
   });
@@ -132,11 +141,14 @@ function onLoad(framework) {
   })
   // to prevent some kind of init bug
   icoMaterial.uniforms.innerRadius.value = config.innerRadius;
+  icoMaterial.uniforms.speed.value = config.speed;
 }
 
 // called on frame updates
 function onUpdate(framework) {
-  icoMaterial.uniforms.time.value = (Date.now()%10000000)/10000;
+  newTime = (Date.now()%1000000)/10000;
+  icoMaterial.uniforms.time.value += (newTime - oldTime) * config.speed;
+  oldTime = newTime;
 }
 
 // when the scene is done initializing, it will call onLoad, then on frame updates, call onUpdate
